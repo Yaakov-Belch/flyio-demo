@@ -13,6 +13,10 @@ test001
 * Use buildah instead of Docker.
 * Git commit SHA in image name ==> image-sha.
 
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
 
 
 * Run a simple server -- static html

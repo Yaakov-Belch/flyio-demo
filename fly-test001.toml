@@ -1,12 +1,11 @@
-# fly.toml app configuration file generated for code-insight
-#
-# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
-#
+# fly-test001.toml - API-OPS deployment configuration
+# This configuration deploys from a pre-built registry image
 
-app = 'code-insight'
+app = 'test001'
 primary_region = 'ewr'
 
 [build]
+  image = "registry.fly.io/code-insight:65f62f1"
 
 [http_service]
   internal_port = 8080
@@ -20,4 +19,3 @@ primary_region = 'ewr'
   memory = '1gb'
   cpu_kind = 'shared'
   cpus = 1
-  memory_mb = 1024
