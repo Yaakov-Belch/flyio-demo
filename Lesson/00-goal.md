@@ -14,6 +14,7 @@ as good lessons.
 
 ## Rules
 
+* We always use `uv` and never use `perl` or `pip` directly.
 * For every exercise, find the appropriate documentation on: https://fly.io/docs/
 * Also, check for code samples via context7.
 * Once we understand the problem and the solution, write one lesson for each exercise.
