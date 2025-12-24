@@ -22,4 +22,4 @@ EXPOSE 8080
 
 # Run the FastMCP server with uvicorn
 # The PORT environment variable will be set by Fly.io
-CMD ["uv", "run", "uvicorn", "code_insight.mcp_server:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uv", "run", "uvicorn", "flyio_demo.code_insight.mcp_server:app", "--host", "0.0.0.0", "--port", "8080"]

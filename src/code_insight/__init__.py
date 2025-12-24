@@ -1,1 +1,0 @@
-# CodeInsight MCP Server
