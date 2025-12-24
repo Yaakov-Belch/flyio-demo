@@ -35,8 +35,12 @@ This lesson demonstrates how to deploy a FastMCP server to Fly.io using API-OPS 
    - Configuring fly.toml
    - Deploying from Registry Image
    - Verifying Deployment
-5. [Key Concepts Learned](#key-concepts-learned)
-6. [References and Additional Resources](#references-and-additional-resources)
+5. [Troubleshooting](#troubleshooting)
+   - Warning: "The app is not listening on the expected address"
+   - Authentication Token Expired
+   - Image Not Found During Deploy
+6. [Key Concepts Learned](#key-concepts-learned)
+7. [References and Additional Resources](#references-and-additional-resources)
 
 ---
 
@@ -256,6 +260,13 @@ primary_region = 'ewr'
   min_machines_running = 0
   processes = ['app']
 
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/info"
+
 [[vm]]
   memory = '1gb'
   cpu_kind = 'shared'
@@ -266,6 +277,7 @@ primary_region = 'ewr'
 1. `app = 'test001'` - Different app name
 2. `[build] image = "..."` - Uses pre-built registry image instead of building from Dockerfile
 3. No `[build] dockerfile` section needed
+4. `[[http_service.checks]]` - Health check configuration with 10s grace period to handle startup timing
 
 ### Step 3.3: Deploy from Registry Image
 
@@ -322,19 +334,15 @@ abc123def456    started ewr     1 total, 1 passing   registry.fly.io/code-insigh
 Test the deployment:
 
 ```bash
-curl https://test001.fly.dev/
+curl https://test001.fly.dev/info
 ```
 
 **Expected output:**
-```html
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Code Insight MCP</title>
-...
+```
+Health Ok! - Auto-deployed via GitHub Actions
 ```
 
-Alternatively, visit `https://test001.fly.dev/` in your browser.
+**Note:** Use the `/info` endpoint for quick health checks. The root path `/` returns a redirect, and `/static/` returns a full HTML page.
 
 ### Step 3.5: View Deployment History
 
@@ -349,6 +357,84 @@ fly releases --app test001 --image
 VERSION STABLE  TYPE    STATUS          DESCRIPTION                                     IMAGE                                     CREATED
 v1      true    deploy  successful      Deploy image registry.fly.io/code-insight:e1d78c3   registry.fly.io/code-insight:e1d78c3   5m ago
 ```
+
+---
+
+## Troubleshooting
+
+### Warning: "The app is not listening on the expected address"
+
+During deployment, you may see this warning:
+
+```
+WARNING The app is not listening on the expected address and will not be reachable by fly-proxy.
+You can fix this by configuring your app to listen on the following addresses:
+  - 0.0.0.0:8080
+```
+
+**Cause:** This is a timing issue. Fly.io's health check runs immediately after the machine starts, but the FastMCP/uvicorn server needs a few seconds to initialize and start listening on the port.
+
+**Resolution:** Configure a `grace_period` in your health check configuration to tell Fly.io to wait before checking if the app is ready. This is the **proper solution** to handle startup timing.
+
+Add this to your `fly-test001.toml`:
+
+```toml
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/info"
+```
+
+**What this does:**
+- `grace_period = "10s"`: Waits 10 seconds after the Machine starts before running health checks
+- `interval = "30s"`: Checks every 30 seconds after the grace period
+- `method = "GET"`: Uses HTTP GET request
+- `timeout = "5s"`: Fails if the check takes longer than 5 seconds
+- `path = "/info"`: Checks the `/info` endpoint (returns 200 OK without redirects)
+
+**Key configuration notes:**
+- Set `grace_period` longer than your app's startup time (FastMCP/uvicorn typically needs 5-8 seconds)
+- The health check expects a 2xx HTTP status code
+- Health checks **do not follow redirects** (301/302), so use a path that returns 200 OK directly
+- Use `/info` instead of `/` to avoid redirect issues
+
+After adding health checks, redeploy:
+
+```bash
+fly deploy --config fly-test001.toml
+```
+
+The warning will no longer appear during deployment.
+
+### Authentication Token Expired
+
+**Error:**
+```
+unauthorized: authentication required
+```
+
+**Cause:** Docker registry tokens from `fly auth docker` expire after 5 minutes.
+
+**Resolution:** Re-run the authentication command:
+```bash
+fly auth docker
+```
+
+### Image Not Found During Deploy
+
+**Error:**
+```
+Error: image 'registry.fly.io/code-insight:65f62f1' not found
+```
+
+**Cause:** The image wasn't pushed successfully or you're using the wrong tag.
+
+**Resolution:**
+1. Verify the image exists locally: `docker images | grep code-insight`
+2. Verify you pushed it: `docker manifest inspect registry.fly.io/code-insight:65f62f1`
+3. Check the tag matches in `fly-test001.toml`
 
 ---
 
@@ -371,7 +457,15 @@ v1      true    deploy  successful      Deploy image registry.fly.io/code-insigh
 - **Multiple apps from one image**: Can deploy the same image to different apps
 - **Version control**: Git SHAs provide clear version tracking
 
-### 4. GitOps vs. API-OPS
+### 4. Health Checks and Startup Timing
+- **Grace period**: Time to wait after Machine starts before checking health
+- **Proper configuration**: Set `grace_period` longer than app startup time (10s recommended for FastMCP)
+- **Health check path**: Use `/info` or other endpoints that return 200 OK directly (no redirects)
+- **No redirect following**: Health checks fail on 301/302 responses
+- **Configuration location**: `[[http_service.checks]]` section in fly.toml
+- **Additional parameters**: `interval`, `timeout`, `method`, and `path` for fine-tuning
+
+### 5. GitOps vs. API-OPS
 
 | Aspect | GitOps (Lesson 02) | API-OPS (Lesson 03) |
 |--------|-------------------|---------------------|
@@ -403,6 +497,12 @@ v1      true    deploy  successful      Deploy image registry.fly.io/code-insigh
 
 - **fly auth docker**: https://fly.io/docs/flyctl/auth-docker/
   - CLI command reference for Docker authentication
+
+- **Health Checks**: https://fly.io/docs/reference/health-checks/
+  - Complete guide to health check types and configuration
+
+- **Troubleshooting Deployments**: https://fly.io/docs/getting-started/troubleshooting/
+  - Common deployment issues including health check grace periods
 
 ### Docker Documentation
 - **docker build**: https://docs.docker.com/engine/reference/commandline/build/

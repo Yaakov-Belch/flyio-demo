@@ -34,3 +34,7 @@ as good lessons.
   - DO NOT MAKE PLANS FOR THE FOLLOWING LESSONS!
 * You cannot run OPS commands yourself (git commit/push; fly).
   - Tell me what to do and I report back the output.
+* NOTE: Please use the URL with the path /info for checks -- the path / returns an empty
+  response with curl (it's a redirect) and the path `/static/` returns a long HTML
+  document. `info` is best for testing.
+
