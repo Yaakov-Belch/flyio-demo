@@ -1,0 +1,30 @@
+GitHub Actions workflow for automatic deployment to Fly.io
+#
+# This workflow automatically deploys the app to Fly.io when changes are pushed to the main branch.
+#
+# Setup instructions:
+# 1. Generate a Fly.io deploy token: fly tokens create deploy -x 999999h
+# 2. Add the token as a GitHub secret: Settings > Secrets and variables > Actions > New repository secret
+#    - Name: FLY_API_TOKEN
+#    - Value: [paste the token from step 1, including "FlyV1 " prefix]
+# 3. Uncomment the workflow below to activate automatic deployments
+# 4. Push to the main branch to trigger deployment
+
+name: Fly Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy app
+    runs-on: ubuntu-latest
+    concurrency: deploy-group    # Ensures only one deployment runs at a time
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl deploy --remote-only
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
