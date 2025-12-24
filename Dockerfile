@@ -7,14 +7,12 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Set working directory
 WORKDIR /app
 
-# Copy dependency files
+# Copy dependency files and source code
 COPY pyproject.toml ./
+COPY src/ ./src/
 
 # Install dependencies using uv (without lockfile, create virtual env)
 RUN uv sync --no-dev
-
-# Copy application code
-COPY src/ ./src/
 
 # Expose port (Fly.io uses PORT env variable, defaults to 8080)
 ENV PORT=8080
