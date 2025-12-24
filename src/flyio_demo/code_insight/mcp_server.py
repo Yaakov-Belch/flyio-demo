@@ -26,7 +26,7 @@ from starlette.responses import PlainTextResponse, FileResponse, HTMLResponse, R
 
 @mcp.custom_route("/info", methods=["GET"])
 async def show_info(request: Request) -> PlainTextResponse:
-    return PlainTextResponse("Health Ok!")
+    return PlainTextResponse("Health Ok! - Auto-deployed via GitHub Actions")
 
 
 # Configure static files directory
