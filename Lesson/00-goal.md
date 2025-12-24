@@ -13,12 +13,22 @@ goals.  Even more important than reaching the technical goal is to document the 
 as good lessons.
 
 ## Rules
-
 * We always use `uv` and never use `perl` or `pip` directly.
+* When starting a new exercise read the executive summary and the table of content
+  at the top of each previous lessons present in `Lessons/` -- and, as needed, read
+  more of the lessons learned.  The exercises build each on top of the lessons before.
 * For every exercise, find the appropriate documentation on: https://fly.io/docs/
 * Also, check for code samples via context7.
 * Once we understand the problem and the solution, write one lesson for each exercise.
 * In the lesson, link to the best documentation sources (usually on https://fly.io/docs/).
 * The lessons are written to files `Lesson/<number>-<title>.md`.
-* You cannot run OPS commands yourself (git commit/push; fly).  Tell me what to do and I
-  report back the output.
+* Each lesson consists of:
+  - Executive summary
+  - Complete table of contents
+  - Step-by-step walkthrough with all lessons learned
+  - Troubleshooting section documenting all issues encountered
+  - Comparison table: Manual vs. GitOps deployment
+  - Key concepts, refereces (URLS) and additional resources
+  - DO NOT MAKE PLANS FOR THE FOLLOWING LESSONS!
+* You cannot run OPS commands yourself (git commit/push; fly).
+  - Tell me what to do and I report back the output.
