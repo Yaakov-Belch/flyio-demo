@@ -19,3 +19,5 @@ as good lessons.
 * Once we understand the problem and the solution, write one lesson for each exercise.
 * In the lesson, link to the best documentation sources (usually on https://fly.io/docs/).
 * The lessons are written to files `Lesson/<number>-<title>.md`.
+* You cannot run OPS commands yourself (git commit/push; fly).  Tell me what to do and I
+  report back the output.
