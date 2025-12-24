@@ -1,0 +1,14 @@
+[project]
+name = "flyio-demo"
+version = "0.1.0"
+description = "Learn how to deploy FastMCP to flyio: Git-OPS and API-OPS"
+readme = "README.md"
+authors = [
+    { name = "Yaakov Belch", email = "git-commit@yaakovnet.net" }
+]
+requires-python = ">=3.14"
+dependencies = []
+
+[build-system]
+requires = ["uv_build>=0.9.11,<0.10.0"]
+build-backend = "uv_build"
