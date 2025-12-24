@@ -372,41 +372,61 @@ You can fix this by configuring your app to listen on the following addresses:
   - 0.0.0.0:8080
 ```
 
-**Cause:** This is a timing issue. Fly.io's health check runs immediately after the machine starts, but the FastMCP/uvicorn server needs a few seconds to initialize and start listening on the port.
+**Cause:** This is a timing issue during rolling deployments. When Fly.io updates machines, it briefly checks if the machine is listening before the FastMCP/uvicorn server finishes initializing (typically 5-8 seconds).
 
-**Resolution:** Configure a `grace_period` in your health check configuration to tell Fly.io to wait before checking if the app is ready. This is the **proper solution** to handle startup timing.
+**Resolution:** This warning can be **safely ignored** if the deployment succeeds. Here's why:
 
-Add this to your `fly-test001.toml`:
+1. The warning appears during the brief rolling update window
+2. The machine recovers and enters a healthy state (you'll see "Machine is now in a good state")
+3. Health checks configured with `grace_period` prevent the machine from being marked unhealthy
+4. The deployment completes successfully
+
+**Verify the app is healthy:**
+
+```bash
+fly status --app test001
+```
+
+**Expected output:**
+```
+Machines
+PROCESS    ID              VERSION    REGION    STATE      CHECKS
+app        286961be6966e8  4          ewr       started    1 total, 1 passing
+```
+
+Check health check status:
+
+```bash
+fly checks list --app test001
+```
+
+**Expected output:**
+```
+Health Checks for test001
+  NAME                      | STATUS  | MACHINE        | OUTPUT
+  servicecheck-00-http-8080 | passing | 286961be6966e8 | Health Ok! - Auto-deployed via GitHub Actions
+```
+
+**Health check configuration (already in fly-test001.toml):**
+
+The `grace_period` setting ensures machines aren't marked unhealthy during startup:
 
 ```toml
 [[http_service.checks]]
-  grace_period = "10s"
-  interval = "30s"
-  method = "GET"
-  timeout = "5s"
-  path = "/info"
+  grace_period = "10s"   # Waits 10s after Machine starts before checking
+  interval = "30s"       # Checks every 30s after grace period
+  method = "GET"         # Uses HTTP GET request
+  timeout = "5s"         # Fails if check takes longer than 5s
+  path = "/info"         # Endpoint that returns 200 OK without redirects
 ```
 
-**What this does:**
-- `grace_period = "10s"`: Waits 10 seconds after the Machine starts before running health checks
-- `interval = "30s"`: Checks every 30 seconds after the grace period
-- `method = "GET"`: Uses HTTP GET request
-- `timeout = "5s"`: Fails if the check takes longer than 5 seconds
-- `path = "/info"`: Checks the `/info` endpoint (returns 200 OK without redirects)
-
-**Key configuration notes:**
-- Set `grace_period` longer than your app's startup time (FastMCP/uvicorn typically needs 5-8 seconds)
-- The health check expects a 2xx HTTP status code
-- Health checks **do not follow redirects** (301/302), so use a path that returns 200 OK directly
+**Key points:**
+- Set `grace_period` longer than app startup time (FastMCP/uvicorn needs 5-8 seconds)
+- Health checks expect 2xx HTTP status codes
+- Health checks **do not follow redirects** (301/302)
 - Use `/info` instead of `/` to avoid redirect issues
 
-After adding health checks, redeploy:
-
-```bash
-fly deploy --config fly-test001.toml
-```
-
-The warning will no longer appear during deployment.
+**Important:** The warning is cosmetic during rolling deployments. As long as the deployment succeeds and health checks show "passing," the app is functioning correctly.
 
 ### Authentication Token Expired
 
