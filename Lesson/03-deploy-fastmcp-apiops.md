@@ -538,16 +538,3 @@ Error: image 'registry.fly.io/code-insight:65f62f1' not found
 - **git rev-parse**: https://git-scm.com/docs/git-rev-parse
   - Getting commit SHAs for image tagging
 
----
-
-## Next Steps
-
-With the three milestones complete, you now have a working API-OPS deployment pipeline. Future enhancements could include:
-
-- Automating the build-tag-push-deploy workflow with scripts
-- Integrating with custom CI/CD systems
-- Using multiple environments (dev, staging, production)
-- Implementing blue-green deployments
-- Adding health checks and monitoring
-
-**Note:** We'll add more detailed steps in future iterations of this lesson as we explore additional API-OPS capabilities.
